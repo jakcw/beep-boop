@@ -71,13 +71,20 @@ function updateVelocity() {
 function update() {
     
 
-    // TODO: collision current changes velocity vector so key presses are flipped
-    if (circlePos.x + radius >= canvas.width || circlePos.x - radius <= 0) {
-        velocity.x = -velocity.x;
+    if (circlePos.x + radius >= canvas.width) {
+        circlePos.x = canvas.width - radius;
+        if (velocity.x > 0) velocity.x = 0; 
+    } else if (circlePos.x - radius <= 0) {
+        circlePos.x = radius;
+        if (velocity.x < 0) velocity.x = 0; 
     }
 
-    if (circlePos.y + radius >= canvas.height || circlePos.y - radius <= 0) {
-        velocity.y = -velocity.y;
+    if (circlePos.y + radius >= canvas.height) {
+        circlePos.y = canvas.height - radius;
+        if (velocity.y > 0) velocity.y = 0;
+    } else if (circlePos.y - radius <= 0) {
+        circlePos.y = radius;
+        if (velocity.y < 0) velocity.y = 0;
     }
 
     circlePos = circlePos.add(velocity);
