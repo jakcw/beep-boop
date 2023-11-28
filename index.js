@@ -20,7 +20,7 @@ class Vec {
         return this.subtract(other).len;
     }
 
-    normalize() {
+    normalise() {
         const mag = this.len;
         return new Vec(this.x / mag, this.y / mag);
     }
@@ -29,6 +29,31 @@ class Vec {
         return new Vec(s * this.x, s * this.y);
     }     
 }
+
+
+class Particle {
+    constructor(x, y) {
+        this.pos = new Vec(x, y);
+        this.velocity = new Vec(2, 2);
+        this.lifespan = 100;
+    }
+
+    update() {
+        this.pos = this.pos.add(this.velocity);
+        this.lifespan -= 1;
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, 10, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+
+    isAlive() {
+        return this.lifespan > 0;
+    }
+}
+
 
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
@@ -56,6 +81,8 @@ document.addEventListener('keyup', function(e) {
     updateVelocity();
 })
 
+
+
 function updateVelocity() {
 
     let newVelocity = new Vec(0, 0);
@@ -68,8 +95,45 @@ function updateVelocity() {
     velocity = newVelocity;
 }
 
-function update() {
+let particles = [];
+let lastParticleTime = 0;
+const fireRate = 100;
+
+document.addEventListener('mousemove', function(event) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    mousePos = new Vec(mouseX, mouseY);
+
+})
+
+document.addEventListener('keydown', function(event) {
+    if (event.code === 'Space') {
+        const currentTime = Date.now();
+        if (currentTime - lastParticleTime > fireRate) {
+            
+            const direction = mousePos.subtract(circlePos).normalise();
+            const speed = 2;
+        
+            const newParticle = new Particle(circlePos.x, circlePos.y);
+            newParticle.velocity = direction.scale(speed);
+            particles.push(newParticle);
     
+            lastParticleTime = currentTime;
+        }
+    }
+   
+ 
+
+})
+
+function update() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach(particle => {
+        particle.update();
+        particle.draw(ctx);
+    })
 
     if (circlePos.x + radius >= canvas.width) {
         circlePos.x = canvas.width - radius;
@@ -88,7 +152,6 @@ function update() {
     }
 
     circlePos = circlePos.add(velocity);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.beginPath();
     ctx.arc(circlePos.x, circlePos.y, radius, 0, 2 * Math.PI);
     ctx.fill();
@@ -96,4 +159,6 @@ function update() {
 }
 
 update();
+
+
 
