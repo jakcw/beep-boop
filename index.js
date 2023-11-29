@@ -34,7 +34,7 @@ class Vec {
 class Particle {
     constructor(x, y) {
         this.pos = new Vec(x, y);
-        this.velocity = new Vec(2, 2);
+        this.velocity = new Vec(0, 0);
         this.lifespan = 100;
     }
 
@@ -54,8 +54,41 @@ class Particle {
     }
 }
 
+class Enemy {
+    constructor(x, y) {
+        this.pos = new Vec(x, y);
+        this.velocity = new Vec(0, 0);
+        this.dead = false;
 
-const canvas = document.getElementById("game-canvas");
+    }
+
+    update(targetPos) {
+        const direction = targetPos.subtract(this.pos).normalise();
+        const speed = 1;
+        this.velocity = direction.scale(speed);
+        this.pos = this.pos.add(this.velocity);
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, 15, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+}
+
+
+
+const canvas = document.getElementById("game-canvas")
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+// Resize the canvas when the document has loaded
+window.onload = resizeCanvas;
+
+// Ensure the canvas stays full-screen even when the window is resized
+window.onresize = resizeCanvas;
 const ctx = canvas.getContext("2d");
 
 let circlePos = new Vec(canvas.width / 2, canvas.height / 2);
@@ -95,9 +128,16 @@ function updateVelocity() {
     velocity = newVelocity;
 }
 
+// particles (shooting)
 let particles = [];
 let lastParticleTime = 0;
 const fireRate = 100;
+
+// enemies
+let enemies = [];
+let lastEnemyTime = 0;
+const enemyRate = 50;
+
 
 document.addEventListener('mousemove', function(event) {
     const rect = canvas.getBoundingClientRect();
@@ -109,11 +149,12 @@ document.addEventListener('mousemove', function(event) {
 
 document.addEventListener('keydown', function(event) {
     if (event.code === 'Space') {
+        keysPressed[event.key] = true;
         const currentTime = Date.now();
         if (currentTime - lastParticleTime > fireRate) {
             
             const direction = mousePos.subtract(circlePos).normalise();
-            const speed = 2;
+            const speed = 5; 
         
             const newParticle = new Particle(circlePos.x, circlePos.y);
             newParticle.velocity = direction.scale(speed);
@@ -122,13 +163,28 @@ document.addEventListener('keydown', function(event) {
             lastParticleTime = currentTime;
         }
     }
-   
- 
 
 })
 
 function update() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    x = Math.random() * canvas.width;
+    y = Math.random() * canvas.height;
+
+    const currentTime = Date.now();
+
+
+
+    if (currentTime - lastEnemyTime > enemyRate) {
+        const newEnemy = new Enemy(x, y);
+        enemies.push(newEnemy);
+        lastEnemyTime = currentTime;
+    }
+
+    enemies.forEach(enemy => {
+        enemy.update(circlePos);
+        enemy.draw(ctx);
+    });
 
     particles.forEach(particle => {
         particle.update();
