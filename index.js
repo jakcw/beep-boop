@@ -35,7 +35,8 @@ class Particle {
     constructor(x, y) {
         this.pos = new Vec(x, y);
         this.velocity = new Vec(0, 0);
-        this.lifespan = 100;
+        this.radius = 5;
+        this.lifespan = 20;
     }
 
     update() {
@@ -45,7 +46,7 @@ class Particle {
 
     draw(ctx) {
         ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, 10, 0, 2 * Math.PI);
+        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
         ctx.fill();
     }
 
@@ -59,29 +60,35 @@ class Enemy {
         this.pos = new Vec(x, y);
         this.velocity = new Vec(0, 0);
         this.dead = false;
+        this.radius = 15;
 
     }
 
     update(targetPos) {
         const direction = targetPos.subtract(this.pos).normalise();
-        const speed = 1;
+        const speed = 2;
         this.velocity = direction.scale(speed);
         this.pos = this.pos.add(this.velocity);
     }
 
     draw(ctx) {
         ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, 15, 0, 2 * Math.PI);
+        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
         ctx.fill();
     }
+
+    isAlive() {
+        return this.dead === false; 
+    }
+
+   
 }
-
-
 
 const canvas = document.getElementById("game-canvas")
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    circlePos = new Vec(canvas.width / 2, canvas.height / 2);
 }
 
 // Resize the canvas when the document has loaded
@@ -132,11 +139,13 @@ function updateVelocity() {
 let particles = [];
 let lastParticleTime = 0;
 const fireRate = 100;
+let score = 0;
+
 
 // enemies
 let enemies = [];
 let lastEnemyTime = 0;
-const enemyRate = 50;
+const enemyDelay = 400;
 
 
 document.addEventListener('mousemove', function(event) {
@@ -166,7 +175,30 @@ document.addEventListener('keydown', function(event) {
 
 })
 
+function detectKill() {
+    
+    particles.forEach(particle => {
+        enemies.forEach(enemy => {
+            if (particle.pos.dist(enemy.pos) < particle.radius + enemy.radius) {
+                enemy.dead = true;
+            }
+         })
+    })
+
+}
+
+function detectHit() {
+    enemies.forEach(enemy => {
+        if (enemy.pos.dist(circlePos) < enemy.radius + radius) {
+            enemy.dead = true;
+        }
+    })
+}
+
 function update() {
+
+    detectKill();
+    detectHit();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     x = Math.random() * canvas.width;
     y = Math.random() * canvas.height;
@@ -174,22 +206,24 @@ function update() {
     const currentTime = Date.now();
 
 
-
-    if (currentTime - lastEnemyTime > enemyRate) {
+    if (currentTime - lastEnemyTime > enemyDelay) {
         const newEnemy = new Enemy(x, y);
         enemies.push(newEnemy);
         lastEnemyTime = currentTime;
     }
 
     enemies.forEach(enemy => {
-        enemy.update(circlePos);
-        enemy.draw(ctx);
+        if (enemy.isAlive()) {
+            enemy.update(circlePos);
+            enemy.draw(ctx);
+        }        
     });
 
     particles.forEach(particle => {
         particle.update();
-        particle.draw(ctx);
+        particle.draw(ctx);        
     })
+
 
     if (circlePos.x + radius >= canvas.width) {
         circlePos.x = canvas.width - radius;
