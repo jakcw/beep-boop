@@ -36,7 +36,7 @@ class Particle {
         this.pos = new Vec(x, y);
         this.velocity = new Vec(0, 0);
         this.radius = 5;
-        this.lifespan = 20;
+        this.lifespan = 2;
     }
 
     update() {
@@ -140,6 +140,7 @@ let particles = [];
 let lastParticleTime = 0;
 const fireRate = 100;
 let score = 0;
+let health = 100;
 
 
 // enemies
@@ -181,24 +182,37 @@ function detectKill() {
         enemies.forEach(enemy => {
             if (particle.pos.dist(enemy.pos) < particle.radius + enemy.radius) {
                 enemy.dead = true;
+                particle.lifespan = 0;
+                score++;
+
             }
          })
     })
-
 }
 
 function detectHit() {
     enemies.forEach(enemy => {
         if (enemy.pos.dist(circlePos) < enemy.radius + radius) {
             enemy.dead = true;
+            health--;
+
         }
-    })
+    });
+
+    enemies = enemies.filter(enemy => !enemy.dead);
 }
+
+
 
 function update() {
 
     detectKill();
     detectHit();
+    if (health == 90) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.fillText("Game over", canvas.width / 2, canvas.height/2);
+        return; 
+    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     x = Math.random() * canvas.width;
     y = Math.random() * canvas.height;
@@ -210,7 +224,9 @@ function update() {
         const newEnemy = new Enemy(x, y);
         enemies.push(newEnemy);
         lastEnemyTime = currentTime;
-    }
+        console.log(enemies.length);
+        console.log(particles.length);
+    } 
 
     enemies.forEach(enemy => {
         if (enemy.isAlive()) {
@@ -244,6 +260,8 @@ function update() {
     circlePos = circlePos.add(velocity);
     ctx.beginPath();
     ctx.arc(circlePos.x, circlePos.y, radius, 0, 2 * Math.PI);
+    ctx.fillText("HP: " + health, 10, 50);
+    ctx.fillText("Score: " + score, canvas.width - 60, 50);
     ctx.fill();
     requestAnimationFrame(update);
 }
