@@ -30,7 +30,6 @@ class Vec {
     }     
 }
 
-
 class Particle {
     constructor(x, y) {
         this.pos = new Vec(x, y);
@@ -91,11 +90,13 @@ function resizeCanvas() {
     circlePos = new Vec(canvas.width / 2, canvas.height / 2);
 }
 
-// Resize the canvas when the document has loaded
-window.onload = resizeCanvas;
+window.onload = function() {
+    resizeCanvas();
+    document.body.style.overflow = 'hidden';
+};
 
-// Ensure the canvas stays full-screen even when the window is resized
 window.onresize = resizeCanvas;
+
 const ctx = canvas.getContext("2d");
 
 let circlePos = new Vec(canvas.width / 2, canvas.height / 2);
